@@ -126,7 +126,7 @@ m.position.x-=center.x;
 m.position.y-=fitted.min.y;
 m.position.z-=center.z;
 
-m.rotation.y=Math.PI;
+m.rotation.y=-Math.PI/2;
 for (const o of [...car.children]) {
   o.visible = false;
 }
