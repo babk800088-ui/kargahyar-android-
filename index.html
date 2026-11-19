@@ -128,9 +128,7 @@ m.position.z-=center.z;
 
 m.rotation.y=Math.PI;
 for (const o of [...car.children]) {
-  if (!wheels.some(w => w.pivot === o)) {
-    o.visible = false;
-  }
+  o.visible = false;
 }
 
 car.add(m);
