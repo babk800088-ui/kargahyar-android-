@@ -3,6 +3,27 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111820"><title>OFFROAD EXTREME</title>
+ 
+#hud:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#050d2099,transparent 30%,transparent 65%,#050d20aa)}
+.top{position:relative;z-index:1;padding:calc(14px + env(safe-area-inset-top)) 16px 0}
+.brand,.stat{border:1px solid #ffffff35;border-radius:13px;background:linear-gradient(145deg,#203441ed,#0b151fe8);backdrop-filter:blur(10px);box-shadow:0 8px 22px #0007}
+.brand{padding:10px 13px}
+.stats{gap:7px}
+.stat{padding:9px;min-width:58px}
+.stat:nth-child(2){border-color:#ff9a3c88}
+.stat:nth-child(2) b{font-size:24px;color:#ffad59}
+#progress{top:88px;height:6px;border:1px solid #ffffff40;background:#07121bbd}
+#bar{background:linear-gradient(90deg,#ff6b24,#ffc16a);box-shadow:0 0 12px #ff8a32}
+#controls{z-index:2;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.ctrl{background:linear-gradient(145deg,#263946,#101a23);box-shadow:0 8px 22px #0009,inset 0 1px #ffffff24}
+.ctrl:active,.ctrl.on{background:linear-gradient(145deg,#ffb35c,#e66c20);box-shadow:0 0 22px #ff8a3280}
+#start{background:radial-gradient(ellipse at 50% 38%,#344e5d77,transparent 52%),linear-gradient(180deg,#06111a99,#07111bea)}
+.panel{border:1px solid #ffffff45;border-radius:24px;background:linear-gradient(145deg,#1a2b37f2,#0b141dec);box-shadow:0 24px 90px #000b}
+.panel h1 em{color:#ff9b42;text-shadow:0 0 24px #ff8b2c55}
+#play{background:linear-gradient(135deg,#ffb45d,#e96c20);box-shadow:0 8px 24px #e9782855}
+#message{padding:12px 20px;border:1px solid #ffffff35;border-radius:14px;background:#101c25df;backdrop-filter:blur(9px)}
+@media(max-width:420px){.top{padding-left:10px;padding-right:10px}.brand{font-size:13px;padding:9px}.stats{gap:5px}.stat{min-width:49px;padding:7px 5px}}
+
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101820;font-family:Arial,sans-serif;color:#fff;touch-action:none}
 #game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
@@ -69,6 +90,7 @@ for(let i=0;i<22;i++){let a=new THREE.Mesh(new THREE.ConeGeometry(12+Math.random
 // winding road ribbons following a gently snaking route
 function routeX(z){return Math.sin(z*.018)*8+Math.sin(z*.052)*2.4}
 function roadStrip(z0,z1,width,material,yoff=.15){const verts=[],inds=[];let n=Math.ceil(Math.abs(z1-z0)/2);for(let i=0;i<=n;i++){let z=z0+(z1-z0)*i/n,x=routeX(z);verts.push(x-width/2,yoff,z,x+width/2,yoff,z);if(i<n){let k=i*2;inds.push(k,k+1,k+2,k+1,k+3,k+2)}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(inds);g.computeVertexNormals();let m=new THREE.Mesh(g,material);m.receiveShadow=true;scene.add(m)}
+  roadStrip(8,-310,10.2,rockMat[0],.22);
 roadStrip(8,-310,7,mud,.3);
 for(let z=-15;z>-300;z-=8){let x=routeX(z);for(let s of [-1,1]){let peb=new THREE.Mesh(new THREE.DodecahedronGeometry(.45,0),rockMat[1]);peb.position.set(x+s*(4.3+Math.random()*1.5),.55,z+Math.random()*3);peb.scale.set(1,.5,1.3);scene.add(peb)}}
 // puddles and river crossing
