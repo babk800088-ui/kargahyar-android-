@@ -91,7 +91,7 @@ for(let s of [-1,1]){box(car,.38,.18,.16,mat(0xf5e5b5),s*.72,1.55,-2.13);box(car
 const wheels=[];
 for(let x of [-1.08,1.08])for(let z of [-1.35,1.35]){let pivot=new THREE.Group();pivot.position.set(x,.85,z);car.add(pivot);let tire=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.38,16),rubber);tire.rotation.z=Math.PI/2;tire.castShadow=true;pivot.add(tire);let hub=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.4,12),mat(0x9aa2a5,.3,.8));hub.rotation.z=Math.PI/2;pivot.add(hub);wheels.push({pivot,tire,x,z,front:z<0})}
 const spare=new THREE.Mesh(new THREE.TorusGeometry(.48,.16,8,16),rubber);spare.position.set(0,2.15,2.15);spare.rotation.y=Math.PI/2;car.add(spare);
-let let modelLoaded=false;
+ let modelLoaded=false;
 
 import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js')
 .then(({GLTFLoader})=>{
