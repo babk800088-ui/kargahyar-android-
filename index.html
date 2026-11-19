@@ -163,7 +163,7 @@ let steer=(keys.left?1:0)-(keys.right?1:0);state.steer=THREE.MathUtils.damp(stat
 if(keys.gas)state.speed+=13*dt;else state.speed-=2.1*dt;if(keys.brake)state.speed-=22*dt;
 state.speed=THREE.MathUtils.clamp(state.speed,-3,24);
 let grip=1-Math.min(Math.abs(state.speed)/45,.45);state.yaw+=state.steer*state.speed*.018*grip*dt*60;
-let nx=state.x+Math.sin(state.yaw)*state.speed*dt,nz=state.z-Math.cos(state.yaw)*state.speed*dt;
+let nx=state.x-Math.cos(state.yaw)*state.speed*dt,nz=state.z-Math.sin(state.yaw)*state.speed*dt;
 let onRoad=Math.abs(nx-routeX(nz))<4.7;if(!onRoad)state.speed*=Math.pow(.982,dt*60);
 let hit=false;for(let o of obstacles){if(Math.hypot(nx-o.x,nz-o.z)<o.r+1.15){hit=true;break}}
 if(hit){state.speed*=-.18;nx=state.x; nz=state.z;pop('OBSTACLE!')}
