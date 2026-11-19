@@ -99,18 +99,23 @@ import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoad
 
   loader.load('./assets/suv.glb',g=>{
     const m=g.scene;
+const bounds=new THREE.Box3().setFromObject(m);
+const size=bounds.getSize(new THREE.Vector3());
 
-    const bounds=new THREE.Box3().setFromObject(m);
-    const size=bounds.getSize(new THREE.Vector3());
-    const center=bounds.getCenter(new THREE.Vector3());
+const longest=Math.max(size.x,size.y,size.z);
+const scale=longest>0?4.1/longest:1;
 
-    m.position.set(-center.x,-bounds.min.y,-center.z);
+m.scale.setScalar(scale);
+m.updateMatrixWorld(true);
 
-    const longest=Math.max(size.x,size.y,size.z);
-    const scale=longest>0?4.1/longest:1;
+const fitted=new THREE.Box3().setFromObject(m);
+const center=fitted.getCenter(new THREE.Vector3());
 
-    m.scale.setScalar(scale);
-    m.rotation.y=Math.PI;
+m.position.x-=center.x;
+m.position.y-=fitted.min.y;
+m.position.z-=center.z;
+
+m.rotation.y=Math.PI;
 
     car.add(m);
 
