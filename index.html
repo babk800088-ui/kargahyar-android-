@@ -38,7 +38,14 @@
  </div>
 </div>
 <div id="start"><div class="panel"><h1>OFFROAD <em>EXTREME</em></h1><p>Conquer the mountain. Cross the river. Keep your wheels on the trail.</p><p>Touch controls: steer • accelerate • brake</p><button id="play">START ENGINE</button><p id="hint">Best played in landscape mode • Mobile browser ready</p></div></div>
-<script type="module">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+ <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const mount=document.querySelector('#game');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x91b7c9);scene.fog=new THREE.Fog(0x91b7c9,75,260);
