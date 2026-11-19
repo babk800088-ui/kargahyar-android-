@@ -127,9 +127,11 @@ m.position.y-=fitted.min.y;
 m.position.z-=center.z;
 
 m.rotation.y=Math.PI;
-car.children.forEach(o => {
-  if (o !== m) o.visible = false;
-});
+for (const o of [...car.children]) {
+  if (!wheels.some(w => w.pivot === o)) {
+    o.visible = false;
+  }
+}
 
 car.add(m);
 
