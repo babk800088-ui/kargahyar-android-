@@ -123,7 +123,9 @@ m.position.y-=fitted.min.y;
 m.position.z-=center.z;
 
 m.rotation.y=Math.PI;
-[chassis,hood,cabin,windshield].forEach(o=>o.visible=false);
+car.children.forEach(o => {
+  if (o !== m) o.visible = false;
+});
 
 car.add(m);
 
