@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#101820">
-<title>OFFROAD EXTREME</title>
+<title>OFFROAD EXTREME • MOUNTAIN REBUILD</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101820;color:#fff;font-family:Arial,sans-serif;touch-action:none}#game{position:fixed;inset:0}canvas{width:100%;height:100%;display:block}
 #hud{position:absolute;inset:0;pointer-events:none;background:linear-gradient(#06101a66,transparent 25%,transparent 70%,#06101a77)}
@@ -29,36 +29,44 @@
 <script type="module">
 import * as THREE from 'three';
 const mount=document.querySelector('#game'),scene=new THREE.Scene();
-scene.background=new THREE.Color(0x9bbbc7);scene.fog=new THREE.Fog(0x9bbbc7,105,330);
+scene.background=new THREE.Color(0x9bbbc7);scene.fog=new THREE.Fog(0x9bbbc7,145,470);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,600);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;mount.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xe3f3ff,0x514633,2.2));
-const sun=new THREE.DirectionalLight(0xffe2bf,3.1);sun.position.set(-45,75,-35);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;sun.shadow.bias=-.00025;scene.add(sun);
+const sun=new THREE.DirectionalLight(0xffe2bf,3.1);sun.position.set(-45,75,-35);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-155;sun.shadow.camera.right=155;sun.shadow.camera.top=185;sun.shadow.camera.bottom=-185;sun.shadow.bias=-.00025;scene.add(sun);
 const mat=(c,r=.88,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
 const dirt=mat(0x65513b),track=mat(0x806747),rocks=[mat(0x77766d),mat(0x626762),mat(0x898477)],wood=mat(0x65452c);
-function height(x,z){return 2.3*Math.sin(x*.052+z*.025)+1.7*Math.cos(z*.043)+.9*Math.sin(x*.105-z*.075)+.35*Math.sin(x*.22+z*.12)}
+function hash2(x,z){let n=Math.sin(x*127.1+z*311.7)*43758.5453;return n-Math.floor(n)}
+function noise2(x,z){let ix=Math.floor(x),iz=Math.floor(z),fx=x-ix,fz=z-iz;fx=fx*fx*(3-2*fx);fz=fz*fz*(3-2*fz);let a=hash2(ix,iz),b=hash2(ix+1,iz),c=hash2(ix,iz+1),d=hash2(ix+1,iz+1);return (a+(b-a)*fx)+((c+(d-c)*fx)-(a+(b-a)*fx))*fz}
+function smooth(a,b,x){let t=THREE.MathUtils.clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
+function rawTerrain(x,z){let n1=(noise2(x*.018,z*.018)-.5)*15,n2=(noise2(x*.052+37,z*.052-18)-.5)*5.8,n3=(noise2(x*.14-9,z*.14+22)-.5)*1.45;let ridge=(1-Math.abs(noise2(x*.032+80,z*.032)-.5)*2);ridge=ridge*ridge*5.5;let valley=-3.2*Math.exp(-Math.pow((x-24*Math.sin(z*.012))/11,2));return n1+n2+n3+ridge+valley+1.5*Math.sin(z*.027)+.6*Math.sin(x*.047+z*.033)}
+function height(x,z){let base=rawTerrain(x,z),cx=routeX(z),d=Math.abs(x-cx),blend=1-smooth(4.2,13.5,d);let road=rawTerrain(cx,z)*.72+.25*Math.sin(z*.24)+.12*Math.sin(z*.73);let rut1=-.18*Math.exp(-Math.pow((x-cx-1.25)/.34,2))*(1-blend*.35),rut2=-.18*Math.exp(-Math.pow((x-cx+1.25)/.34,2))*(1-blend*.35);return base*(1-blend)+road*blend+rut1+rut2}
 function groundTexture(){let c=document.createElement('canvas');c.width=c.height=256;let q=c.getContext('2d'),im=q.createImageData(256,256);for(let i=0;i<im.data.length;i+=4){let n=92+Math.random()*95;im.data[i]=n*.86;im.data[i+1]=n*.79;im.data[i+2]=n*.62;im.data[i+3]=255}q.putImageData(im,0,0);let t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(58,68);t.colorSpace=THREE.SRGBColorSpace;return t}
 const groundMat=new THREE.MeshStandardMaterial({map:groundTexture(),vertexColors:true,roughness:1});
-const geo=new THREE.PlaneGeometry(320,380,240,280);geo.rotateX(-Math.PI/2);let pos=geo.attributes.position,colors=[];
-for(let i=0;i<pos.count;i++){let x=pos.getX(i),z=pos.getZ(i),h=height(x,z);pos.setY(i,h);let n=Math.sin(x*.31+z*.17)*.055+Math.cos(z*.27-x*.12)*.04+Math.sin(x*.83-z*.61)*.018;let base=h>2.7?[.48,.47,.40]:h<-.8?[.29,.34,.26]:[.39,.40,.30];colors.push(THREE.MathUtils.clamp(base[0]+n,0,1),THREE.MathUtils.clamp(base[1]+n,0,1),THREE.MathUtils.clamp(base[2]+n,0,1))}
+const geo=new THREE.PlaneGeometry(360,720,270,540);geo.rotateX(-Math.PI/2);let pos=geo.attributes.position,colors=[];
+for(let i=0;i<pos.count;i++){let x=pos.getX(i),z=pos.getZ(i),h=height(x,z);pos.setY(i,h);let n=Math.sin(x*.31+z*.17)*.055+Math.cos(z*.27-x*.12)*.04+Math.sin(x*.83-z*.61)*.018;let base=h>5?[.50,.49,.43]:h< -2?[.27,.32,.25]:[.39,.39,.29];colors.push(THREE.MathUtils.clamp(base[0]+n,0,1),THREE.MathUtils.clamp(base[1]+n,0,1),THREE.MathUtils.clamp(base[2]+n,0,1))}
 geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();let floor=new THREE.Mesh(geo,groundMat);floor.receiveShadow=true;scene.add(floor);
 function box(parent,w,h,d,m,x,y,z){let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function routeX(z){return Math.sin(z*.018)*8+Math.sin(z*.052)*2.4}
 function strip(z0,z1,width,m,off){let v=[],idx=[],steps=Math.ceil(Math.abs(z1-z0)/.8);for(let i=0;i<=steps;i++){let z=z0+(z1-z0)*i/steps,x=routeX(z);v.push(x-width/2,height(x-width/2,z)+off,z,x+width/2,height(x+width/2,z)+off,z);if(i<steps){let k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2)}}let g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();let o=new THREE.Mesh(g,m);o.receiveShadow=true;scene.add(o)}
-strip(12,-340,11,track,.12);strip(12,-340,7,dirt,.19);
+strip(12,-340,12.5,track,.10);strip(12,-340,7.4,dirt,.17);
 // Distant layered mountain silhouettes
 const mountainM=[mat(0x82918a,1),mat(0x71817e,1),mat(0x657570,1)];
-for(let row=0;row<3;row++)for(let i=0;i<22;i++){let side=i%2?1:-1,x=side*(55+Math.random()*80),z=-25-i*15-row*28,r=17+Math.random()*22,h=24+Math.random()*38;let m=new THREE.Mesh(new THREE.ConeGeometry(r,h,7),mountainM[(i+row)%3]);m.position.set(x,height(x,z)+h*.38,z);m.rotation.y=Math.random()*Math.PI;scene.add(m)}
-const obstacles=[];for(let i=0;i<90;i++){let z=-i*3.7-10,x=(i%2?1:-1)*(10+Math.random()*12),r=1+Math.random()*1.8;let o=new THREE.Mesh(new THREE.DodecahedronGeometry(r,1),rocks[i%3]);o.position.set(x,height(x,z)+r*.42,z);o.scale.y=.72;o.castShadow=true;o.receiveShadow=true;scene.add(o);obstacles.push({x,z,r})}
-const trunk=mat(0x493526),leaf=mat(0x344c37);for(let i=0;i<115;i++){let z=-Math.random()*335-5,x=routeX(z)+(Math.random()<.5?-1:1)*(15+Math.random()*26),t=new THREE.Group();let b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.25,2.2,7),trunk);b.position.y=1.1;t.add(b);let c=new THREE.Mesh(new THREE.ConeGeometry(1.8,4.6,7),leaf);c.position.y=3.8;t.add(c);t.position.set(x,height(x,z),z);scene.add(t)}
+for(let row=0;row<4;row++)for(let i=0;i<28;i++){let side=i%2?1:-1,x=side*(70+Math.random()*105),z=-25-i*16-row*36,r=22+Math.random()*30,h=32+Math.random()*52;let m=new THREE.Mesh(new THREE.ConeGeometry(r,h,7),mountainM[(i+row)%3]);m.position.set(x,height(x,z)+h*.38,z);m.rotation.y=Math.random()*Math.PI;scene.add(m)}
+const obstacles=[];for(let i=0;i<125;i++){let z=-i*2.75-8,side=i%2?1:-1,x=routeX(z)+side*(7.8+Math.random()*10),r=.8+Math.random()*2.2;let o=new THREE.Mesh(new THREE.DodecahedronGeometry(r,1),rocks[i%3]);o.position.set(x,height(x,z)+r*.38,z);o.rotation.set(Math.random()*.45,Math.random()*3,Math.random()*.4);o.scale.set(.8+Math.random()*.65,.55+Math.random()*.55,.8+Math.random()*.6);o.castShadow=true;o.receiveShadow=true;scene.add(o);obstacles.push({x,z,r})}
+// Broken cliff faces and tall rock pinnacles frame the driving corridor.
+const cliffM=[mat(0x696b63,1),mat(0x77766d,1),mat(0x555f5b,1)];
+for(let side of [-1,1])for(let i=0;i<34;i++){let z=-i*10-12,x=routeX(z)+side*(27+Math.random()*24),w=5+Math.random()*9,h=9+Math.random()*20;let cliff=new THREE.Mesh(new THREE.ConeGeometry(w,h,5),cliffM[i%3]);cliff.position.set(x,height(x,z)+h*.36,z);cliff.rotation.z=(Math.random()-.5)*.3;cliff.rotation.y=Math.random()*Math.PI;cliff.castShadow=true;cliff.receiveShadow=true;scene.add(cliff)}
+const trunk=mat(0x493526),leaf=mat(0x344c37);for(let i=0;i<165;i++){let z=-Math.random()*345-5,x=routeX(z)+(Math.random()<.5?-1:1)*(16+Math.random()*34),t=new THREE.Group();let b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.25,2.2,7),trunk);b.position.y=1.1;t.add(b);let c=new THREE.Mesh(new THREE.ConeGeometry(1.8,4.6,7),leaf);c.position.y=3.8;t.add(c);t.scale.setScalar(.65+Math.random()*.85);t.position.set(x,height(x,z),z);scene.add(t)}
+const shrubMat=[mat(0x46563a,1),mat(0x596044,1),mat(0x6b6946,1)];for(let i=0;i<260;i++){let z=-Math.random()*350,x=routeX(z)+(Math.random()<.5?-1:1)*(9+Math.random()*42),r=.35+Math.random()*.9;let sh=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),shrubMat[i%3]);sh.position.set(x,height(x,z)+r*.45,z);sh.scale.y=.55;sh.castShadow=true;scene.add(sh)}
 const water=new THREE.MeshStandardMaterial({color:0x39879b,roughness:.22,transparent:true,opacity:.86});let river=new THREE.Mesh(new THREE.PlaneGeometry(48,13),water);river.rotation.x=-Math.PI/2;river.position.set(0,.28,-168);scene.add(river);for(let i=0;i<11;i++)box(scene,1,.22,13,wood,routeX(-168)+(i-5)*1.05,.55,-168);for(let i=0;i<13;i++)box(scene,1,.25,10,wood,routeX(-265)+(i-6)*1.05,.72,-265);
 const car=new THREE.Group();scene.add(car);const body=mat(0x27343a,.42,.45),black=mat(0x111719),glass=mat(0x19313b,.2,.3),tire=mat(0x101214,.95),metal=mat(0x9da8aa,.3,.8);
 box(car,2.05,.65,4.1,body,0,1.4,0);box(car,1.95,.38,1.2,body,0,1.82,-1.25);box(car,1.72,1,1.9,body,0,2.08,.35);box(car,1.55,.75,.06,glass,0,2.15,-.63);
 const wheels=[];for(let x of [-1.08,1.08])for(let z of [-1.35,1.35]){let p=new THREE.Group();p.position.set(x,.85,z);car.add(p);let t=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.38,20),tire);t.rotation.z=Math.PI/2;p.add(t);let h=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.4,16),metal);h.rotation.z=Math.PI/2;p.add(h);wheels.push({p,front:z<0})}
 for(let x of [-.7,.7])box(car,.38,.16,.15,mat(0xffe2aa),x,1.55,-2.12);
-let carGroundOffset=-.30;
-import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js').then(({GLTFLoader})=>new GLTFLoader().load('./assets/suv.glb',g=>{let m=g.scene,b=new THREE.Box3().setFromObject(m),sz=b.getSize(new THREE.Vector3()),sc=4.1/Math.max(sz.x,sz.y,sz.z);m.scale.setScalar(sc);m.updateMatrixWorld(true);b.setFromObject(m);let c=b.getCenter(new THREE.Vector3());m.position.set(-c.x,-b.min.y,-c.z);m.rotation.y=-Math.PI/2;car.children.forEach(o=>o.visible=false);car.add(m);carGroundOffset=0},undefined,e=>console.warn('Meshy model unavailable; procedural SUV remains active',e))).catch(console.warn);
+let carGroundOffset=-.30,rideHalfX=1.08,rideHalfZ=1.35;
+import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js').then(({GLTFLoader})=>new GLTFLoader().load('./assets/suv.glb',g=>{let m=g.scene;m.rotation.y=-Math.PI/2;let b=new THREE.Box3().setFromObject(m),sz=b.getSize(new THREE.Vector3()),sc=4.1/Math.max(sz.x,sz.y,sz.z);m.scale.setScalar(sc);m.updateMatrixWorld(true);b.setFromObject(m);let c=b.getCenter(new THREE.Vector3());m.position.set(-c.x,-b.min.y,-c.z);m.updateMatrixWorld(true);let finalBox=new THREE.Box3().setFromObject(m),finalSize=finalBox.getSize(new THREE.Vector3());rideHalfX=Math.max(.72,finalSize.x*.31);rideHalfZ=Math.max(.9,finalSize.z*.32);car.children.forEach(o=>o.visible=false);car.add(m);carGroundOffset=0},undefined,e=>console.warn('Meshy model unavailable; procedural SUV remains active',e))).catch(console.warn);
 const state={x:0,z:4,yaw:0,speed:0,steer:0,started:false,elapsed:0,score:0,finished:false},keys={left:false,right:false,gas:false,reverse:false,brake:false};
 document.querySelectorAll('[data-control]').forEach(b=>{let k=b.dataset.control;const down=e=>{e.preventDefault();keys[k]=true;b.classList.add('on')},up=e=>{e.preventDefault();keys[k]=false;b.classList.remove('on')};b.addEventListener('pointerdown',down);['pointerup','pointercancel','pointerleave'].forEach(v=>b.addEventListener(v,up))});
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key==='w')keys.gas=true;if(e.key==='ArrowDown'||e.key==='s')keys.reverse=true;if(e.key===' ')keys.brake=true});
@@ -75,7 +83,7 @@ state.yaw-=state.steer*state.speed*.018*dt*60;let nx=state.x+Math.sin(state.yaw)
 if(Math.abs(nx-routeX(nz))>4.7)state.speed*=Math.pow(.982,dt*60);let hit=false;for(let o of obstacles)if(Math.hypot(nx-o.x,nz-o.z)<o.r+1.15){hit=true;break}if(hit){state.speed*=-.16;nx=state.x;nz=state.z;message('OBSTACLE!')}
 if(nz<-335){state.finished=true;message('STAGE COMPLETE!');state.score+=1000}state.x=THREE.MathUtils.clamp(nx,-48,48);state.z=Math.max(-340,nz);
 // Keep the chassis level; calculate ride height from all four wheel contact points.
-let wh=[height(state.x-1.08,state.z-1.35),height(state.x+1.08,state.z-1.35),height(state.x-1.08,state.z+1.35),height(state.x+1.08,state.z+1.35)];let ride=wh.reduce((a,b)=>a+b,0)/4;
+let wh=[height(state.x-rideHalfX,state.z-rideHalfZ),height(state.x+rideHalfX,state.z-rideHalfZ),height(state.x-rideHalfX,state.z+rideHalfZ),height(state.x+rideHalfX,state.z+rideHalfZ)];let ride=wh.reduce((a,b)=>a+b,0)/4;
 car.position.set(state.x,ride+carGroundOffset+Math.sin(state.elapsed*10)*Math.min(Math.abs(state.speed)*.0015,.02),state.z);car.rotation.set(0,state.yaw,0);
 for(let w of wheels){w.p.rotation.x-=state.speed*dt/.55;if(w.front)w.p.rotation.y=-state.steer*.35}
 $('#bar').style.width=Math.min(100,Math.max(0,-state.z/335*100))+'%';$('#score').textContent=state.score;$('#speed').textContent=Math.round(Math.abs(state.speed)*3.6);$('#time').textContent=String(Math.floor(state.elapsed/60)).padStart(2,'0')+':'+String(Math.floor(state.elapsed%60)).padStart(2,'0')}
