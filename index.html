@@ -11,7 +11,7 @@
 #controls{position:fixed;bottom:16px;left:0;right:0;padding:0 15px;display:flex;justify-content:space-between;align-items:end;z-index:3;pointer-events:none}.pad{display:grid;grid-template-columns:54px 54px 54px;grid-template-rows:54px 54px;gap:6px;pointer-events:auto}
 button{color:white;border:1px solid #ffffff70;background:#172a35bb;border-radius:14px;font-weight:bold;touch-action:none;backdrop-filter:blur(6px)}.arrow{font-size:23px}.arrow:active,.held{background:#bd692ddd!important}#up{grid-column:2;grid-row:1}#left{grid-column:1;grid-row:2}#down{grid-column:2;grid-row:2}#right{grid-column:3;grid-row:2}
 #pedals{display:flex;gap:8px;pointer-events:auto}.pedal{width:62px;height:86px;font-size:13px}#gas{background:#226c4dcc}#brake{background:#963b3bcc}#camera{position:fixed;right:12px;bottom:145px;padding:10px 12px;font-size:12px;z-index:4}
-#modelStatus{position:fixed;left:12px;bottom:12px;color:#fff;background:#172a3599;padding:5px 8px;border-radius:7px;font:11px Tahoma;z-index:2;text-shadow:0 1px 3px #000}
+#modelStatus{position:fixed;left:12px;bottom:12px;color:white;background:#172a3599;padding:5px 8px;border-radius:7px;font:11px Tahoma;z-index:2;text-shadow:0 1px 3px #000}
 </style>
 </head>
 <body>
@@ -19,7 +19,7 @@ button{color:white;border:1px solid #ffffff70;background:#172a35bb;border-radius
 <div id="hud"><div id="brand">OFFROAD / WILD TERRAIN</div><div id="speed">0 <small style="font-size:12px">KM/H</small></div><div id="gear">GEAR · N</div></div>
 <div id="help">▲ جلو &nbsp; ▼ عقب<br>◀ ▶ فرمان<br>WASD / کلیدهای جهت</div>
 <button id="camera">تغییر دوربین</button>
-<div id="modelStatus">در حال بارگذاری ماشین…</div>
+<div id="modelStatus">در حال بارگذاری ماشین قبلی…</div>
 <div id="controls"><div class="pad"><button class="arrow" id="up">▲</button><button class="arrow" id="left">◀</button><button class="arrow" id="down">▼</button><button class="arrow" id="right">▶</button></div><div id="pedals"><button class="pedal" id="brake">ترمز</button><button class="pedal" id="gas">گاز</button></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
@@ -97,8 +97,8 @@ for(let i=0;i<280;i++){
  }
 }
 
-/* Vehicle root: physics, position and terrain tilt are applied here.
-   The procedural vehicle remains as a fallback while the original GLB loads. */
+/* The vehicle root is controlled by the existing physics and camera.
+   The original uploaded GLB replaces the temporary procedural car after loading. */
 const car=new THREE.Group();scene.add(car);
 const proceduralCar=new THREE.Group();car.add(proceduralCar);
 const body=M(0xc65b24,.48,.12),dark=M(0x17232a,.65),glass=M(0x294653,.2,.22);
@@ -124,36 +124,30 @@ for(let s of [-1,1])for(let z of [-1.35,1.35]){
  hub.rotation.z=Math.PI/2;p.add(hub);wheels.push({p,tire,s,z})
 }
 
-/* Load the exact previous vehicle asset from the existing GitHub repository. */
-const SUV_URL='https://raw.githubusercontent.com/babk800088-ui/kargahyar-android-/main/assets/suv.glb';
+/* Original SUV: measured GLB bounds are X=1.000, Y=0.612, Z=0.585.
+   X is its long axis. Rotate X onto the game's forward/back Z axis.
+   Center and ground the rotated/scaled model before attaching it to the moving car root. */
 const loader=new GLTFLoader();
-let loadedSUV=null;
-loader.load(SUV_URL,(gltf)=>{
+loader.load('./assets/suv.glb',(gltf)=>{
  const model=gltf.scene;
- model.rotation.y=-Math.PI/2;
- model.updateMatrixWorld(true);
- let bounds=new THREE.Box3().setFromObject(model);
- const size=new THREE.Vector3();bounds.getSize(size);
- if(!Number.isFinite(size.z)||size.z<0.001) throw new Error('Invalid SUV model dimensions');
- const targetLength=4.25;
- const scale=targetLength/size.z;
- model.scale.setScalar(scale);
- model.updateMatrixWorld(true);
- bounds.setFromObject(model);
- const center=new THREE.Vector3();bounds.getCenter(center);
- model.position.x-=center.x;
- model.position.y-=bounds.min.y;
- model.position.z-=center.z;
+ model.scale.setScalar(4.25);
+ const visual=new THREE.Group();
+ visual.rotation.y=-Math.PI/2;
+ visual.add(model);
+ visual.updateMatrixWorld(true);
+ const bounds=new THREE.Box3().setFromObject(visual);
+ const center=new THREE.Vector3();
+ bounds.getCenter(center);
+ visual.position.set(-center.x,-bounds.min.y+0.025,-center.z);
  model.traverse(o=>{
   if(o.isMesh){o.castShadow=true;o.receiveShadow=true}
  });
- car.add(model);
- loadedSUV=model;
+ car.add(visual);
  proceduralCar.visible=false;
- document.getElementById('modelStatus').textContent='مدل SUV قبلی بارگذاری شد';
+ document.getElementById('modelStatus').textContent='ماشین اصلی با موفقیت بارگذاری شد';
 },undefined,(error)=>{
- console.error('SUV GLB load failed:',error);
- document.getElementById('modelStatus').textContent='مدل قبلی بارگذاری نشد؛ ماشین جایگزین فعال است';
+ console.error('SUV load error:',error);
+ document.getElementById('modelStatus').textContent='بارگذاری ماشین ناموفق؛ مسیر assets/suv.glb را بررسی کن';
 });
 
 const st={x:0,z:105,yaw:0,speed:0,steer:0,gas:0,brake:0,reverse:0,left:0,right:0},keys={};
@@ -173,8 +167,8 @@ const clock=new THREE.Clock();
 function animate(){
  requestAnimationFrame(animate);
  let dt=Math.min(clock.getDelta(),.035),
- gas=Math.max(st.gas,keys.w||keys.arrowup?1:0),
- rev=Math.max(st.reverse,keys.s||keys.arrowdown?1:0),
+ gas=Math.max(st.gas,(keys.w||keys.arrowup)?1:0),
+ rev=Math.max(st.reverse,(keys.s||keys.arrowdown)?1:0),
  br=Math.max(st.brake,keys[' ']?1:0),
  turn=(st.left||keys.a||keys.arrowleft?1:0)-(st.right||keys.d||keys.arrowright?1:0);
  st.steer+=(turn*.58-st.steer)*Math.min(1,dt*4.2);
