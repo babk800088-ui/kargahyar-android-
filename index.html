@@ -38,9 +38,9 @@ button{color:white;border:1px solid #ffffff70;background:#172a35bb;border-radius
   <div id="speed">0 <small style="font-size:12px">KM/H</small></div>
   <div id="gear">GEAR · N</div>
 </div>
-<div id="help">▲ جلو &nbsp; ▼ عقب<br>◀ ▶ فرمان<br>WASD / کلیدهای جهت</div>
-<button id="camera">تغییر دوربین</button>
-<div id="modelStatus">در حال بارگذاری ماشین…</div>
+<div id="help">▲ FORWARD &nbsp; ▼ REVERSE<br>◀ ▶ STEER<br>WASD / ARROW KEYS</div>
+<button id="camera">CHANGE CAMERA</button>
+<div id="modelStatus">LOADING VEHICLE...</div>
 <div id="errorBox"></div>
 <div id="controls">
   <div class="pad">
@@ -50,8 +50,8 @@ button{color:white;border:1px solid #ffffff70;background:#172a35bb;border-radius
     <button class="arrow" id="right">▶</button>
   </div>
   <div id="pedals">
-    <button class="pedal" id="brake">ترمز</button>
-    <button class="pedal" id="gas">گاز</button>
+    <button class="pedal" id="brake">BRAKE</button>
+    <button class="pedal" id="gas">GAS</button>
   </div>
 </div>
 
@@ -228,10 +228,10 @@ try {
     });
     car.add(visual);
     proceduralCar.visible=false;
-    statusEl.textContent='ماشین اصلی با موفقیت بارگذاری شد';
+    statusEl.textContent='VEHICLE LOADED SUCCESSFULLY';
   },undefined,(error)=>{
     console.error('SUV load error:',error);
-    statusEl.textContent='مدل اصلی بارگذاری نشد؛ ماشین موقت نمایش داده می‌شود';
+    statusEl.textContent='VEHICLE MODEL FAILED TO LOAD. USING BACKUP VEHICLE.';
   });
 
   // کنترل‌ها و حرکت خودرو
@@ -328,7 +328,7 @@ try {
   });
 
 } catch(error) {
-  statusEl.textContent='خطا در اجرای بازی';
+  statusEl.textContent='GAME INITIALIZATION ERROR';
   showError(error && error.stack ? error.stack : error);
 }
 </script>
