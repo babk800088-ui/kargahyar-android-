@@ -59,7 +59,7 @@ const dashes=[];for(let z=25;z>-300;z-=10){let o=new THREE.Mesh(new THREE.BoxGeo
 const bike=new THREE.Group();scene.add(bike);
 function box(parent,x,y,z,sx,sy,sz,material){const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
 function cyl(parent,x,y,z,r,h,material,rotZ=0){const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),material);o.position.set(x,y,z);o.rotation.z=rotZ;o.castShadow=true;parent.add(o);return o}
-function wheel(z){const g=new THREE.Group();g.position.set(0,.58,z);bike.add(g);const tire=new THREE.Mesh(new THREE.TorusGeometry(.49,.12,12,28),black);g.add(tire);const rim=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,24),chrome);g.add(rim);const hub=cyl(g,0,0,0,.09,.2,chrome,Math.PI/2);for(let i=0;i<8;i++){let a=i*Math.PI/4;let sp=new THREE.Mesh(new THREE.BoxGeometry(.025,.66,.025),chrome);sp.rotation.z=a;g.add(sp)}return g}
+function wheel(z){const g=new THREE.Group();g.position.set(0,.58,z);bike.add(g);const tire=new THREE.Mesh(new THREE.TorusGeometry(.49,.12,12,28),black);tire.rotation.y=Math.PI/2;g.add(tire);const rim=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,24),chrome);rim.rotation.y=Math.PI/2;g.add(rim);cyl(g,0,0,0,.09,.2,chrome,Math.PI/2);for(let i=0;i<8;i++){let a=i*Math.PI/4;let sp=new THREE.Mesh(new THREE.BoxGeometry(.025,.66,.025),chrome);sp.rotation.z=a;sp.rotation.y=Math.PI/2;g.add(sp)}return g}
 const rear=wheel(.9),front=wheel(-1.05);
 box(bike,0,1.15,.35,.72,.38,red);box(bike,0,1.38,.02,.58,.2,black);box(bike,0,1.05,-.45,.5,.25,red);
 const tank=new THREE.Mesh(new THREE.SphereGeometry(.42,20,14),red);tank.scale.set(.85,.65,1.35);tank.position.set(0,1.43,-.28);bike.add(tank);
