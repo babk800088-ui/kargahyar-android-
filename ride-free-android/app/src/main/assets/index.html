@@ -87,7 +87,7 @@ for(const m of mountains){m.position.z+=move*.7;if(m.position.z>25)m.position.z-
 document.getElementById('speed').innerHTML=Math.round(speed)+' <small>KM/H</small>';document.getElementById('distance').textContent='DIST '+Math.floor(dist)+' M';document.getElementById('score').textContent='SCORE '+score;
 }
 bike.position.y=.02+Math.sin(now*.008)*.015;
-camera.position.lerp(new THREE.Vector3(bike.position.x*.55,5.2,8.8),.055);camera.lookAt(bike.position.x*.35,1,-9);
+camera.position.lerp(new THREE.Vector3(bike.position.x+8,3.8,1.8),.055);camera.lookAt(bike.position.x,1,-6);
 renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
