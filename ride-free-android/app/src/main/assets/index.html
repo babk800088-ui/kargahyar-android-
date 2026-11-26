@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>RIDE FREE 3D</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07111b;font-family:Arial,sans-serif;touch-action:none}
+#game{position:fixed;inset:0}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;color:white;text-shadow:0 2px 5px #000}
+#brand{position:absolute;top:14px;left:16px;font-weight:900;font-size:18px;letter-spacing:2px;color:#fff}
+#stats{position:absolute;top:14px;right:16px;text-align:right;font-weight:bold;font-size:15px}
+#speed{font-size:28px;color:#ffcf33}
+#hint{position:absolute;top:62px;left:16px;font-size:11px;opacity:.8}
+#controls{position:fixed;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;align-items:end;padding:0 18px;pointer-events:none}
+.cluster{display:flex;gap:12px;align-items:end}
+.ctrl{pointer-events:auto;border:2px solid #ffffff88;background:#101c2ccc;color:white;border-radius:18px;width:72px;height:66px;font-size:13px;font-weight:bold;box-shadow:0 5px 18px #0008;touch-action:none}
+.ctrl.big{width:88px;height:78px;background:#e84b24dd}.ctrl.active{background:#ffbd22;color:#111}
+#center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+#start{pointer-events:auto;border:0;border-radius:30px;padding:15px 32px;background:#ffbd22;color:#111;font-weight:900;font-size:17px;box-shadow:0 6px 24px #0008}
+#message{font-size:12px;margin-top:10px}
+@media(max-height:430px){.ctrl{height:58px;width:64px}.ctrl.big{height:68px;width:78px}#brand{font-size:15px}}
+</style></head><body>
+<div id="game"></div><div id="hud"><div id="brand">RIDE FREE <span style="color:#ffbd22">3D</span></div>
+<div id="hint">MOUNTAIN RUN • FREE RIDE</div><div id="stats"><div id="speed">0 <small>KM/H</small></div><div id="distance">DIST 0 M</div><div id="score">SCORE 0</div></div>
+<div id="center"><button id="start">START RIDE</button><div id="message">Hold GAS to accelerate • Avoid traffic</div></div></div>
+<div id="controls"><div class="cluster"><button class="ctrl" id="left">◀ LEFT</button><button class="ctrl" id="right">RIGHT ▶</button></div><div class="cluster"><button class="ctrl" id="brake">BRAKE</button><button class="ctrl big" id="gas">GAS</button></div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+const root=document.getElementById('game');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x87c9ed);scene.fog=new THREE.Fog(0x87c9ed,45,190);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;root.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdff4ff,0x566044,2));
+const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-25,45,25);sun.castShadow=true;scene.add(sun);
+const mat=(c,r=.7,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const asphalt=mat(0x30363b),white=mat(0xffffff),yellow=mat(0xffd23f),grass=mat(0x47734a),rock=mat(0x71818a),red=mat(0xe52e28,.35,.45),black=mat(0x11151a,.55,.25),chrome=mat(0xb9c5ca,.25,.8);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.16;scene.add(ground);
+const road=new THREE.Mesh(new THREE.PlaneGeometry(13,360),asphalt);road.rotation.x=-Math.PI/2;road.position.set(0,-.12,-120);scene.add(road);
+for(let x of [-6.25,6.25]){const line=new THREE.Mesh(new THREE.BoxGeometry(.13,.025,360),white);line.position.set(x,-.09,-120);scene.add(line)}
+const dashes=[];for(let z=25;z>-300;z-=10){let o=new THREE.Mesh(new THREE.BoxGeometry(.16,.03,4.5),yellow);o.position.set(0,-.075,z);scene.add(o);dashes.push(o)}
+// Procedural sport motorcycle
+const bike=new THREE.Group();scene.add(bike);
+function box(parent,x,y,z,sx,sy,sz,material){const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
+function cyl(parent,x,y,z,r,h,material,rotZ=0){const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),material);o.position.set(x,y,z);o.rotation.z=rotZ;o.castShadow=true;parent.add(o);return o}
+function wheel(z){const g=new THREE.Group();g.position.set(0,.58,z);bike.add(g);const tire=new THREE.Mesh(new THREE.TorusGeometry(.49,.12,12,28),black);g.add(tire);const rim=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,24),chrome);g.add(rim);const hub=cyl(g,0,0,0,.09,.2,chrome,Math.PI/2);for(let i=0;i<8;i++){let a=i*Math.PI/4;let sp=new THREE.Mesh(new THREE.BoxGeometry(.025,.66,.025),chrome);sp.rotation.z=a;g.add(sp)}return g}
+const rear=wheel(.9),front=wheel(-1.05);
+box(bike,0,1.15,.35,.72,.38,red);box(bike,0,1.38,.02,.58,.2,black);box(bike,0,1.05,-.45,.5,.25,red);
+const tank=new THREE.Mesh(new THREE.SphereGeometry(.42,20,14),red);tank.scale.set(.85,.65,1.35);tank.position.set(0,1.43,-.28);bike.add(tank);
+box(bike,0,1.03,-.95,.18,.48,black);box(bike,0,1.64,-1.12,.55,.08,chrome);
+const fork1=cyl(bike,-.22,.95,-1.03,.055,.9,chrome,.18),fork2=cyl(bike,.22,.95,-1.03,.055,.9,chrome,.18);
+box(bike,0,1.88,-1.13,.65,.07,black);box(bike,0,1.18,1.0,.65,.12,chrome);
+const rider=new THREE.Group();bike.add(rider);box(rider,0,1.95,.15,.48,.65,black);const helmet=new THREE.Mesh(new THREE.SphereGeometry(.28,18,14),mat(0xffd23f,.3,.2));helmet.position.set(0,2.42,-.18);rider.add(helmet);
+const obstacles=[];function makeCar(z,lane){const g=new THREE.Group();g.position.set(lane,0,z);box(g,0,.55,0,1.65,.8,2.7,red);box(g,0,1.05,-.15,1.35,.55,1.25,mat(0x9ed9ed,.25));for(let x of [-.82,.82])for(let zz of [-.85,.85]){const w=new THREE.Mesh(new THREE.BoxGeometry(.22,.4,.48),black);w.position.set(x,.32,zz);g.add(w)}scene.add(g);obstacles.push(g)}
+for(let i=0;i<8;i++)makeCar(-35-i*32,[-4,0,4][i%3]);
+const mountains=[];for(let i=0;i<32;i++){let h=12+Math.random()*24;let m=new THREE.Mesh(new THREE.ConeGeometry(9+Math.random()*10,h,5),rock);m.position.set((i%2?1:-1)*(18+Math.random()*40),h/2-1,-i*13-20);scene.add(m);mountains.push(m)}
+let speed=0,dist=0,score=0,lane=0,running=false,steer=0,wheelie=0;
+const pressed={};function bind(id,key){const el=document.getElementById(id);el.addEventListener('pointerdown',e=>{e.preventDefault();pressed[key]=true;el.classList.add('active')});for(const ev of ['pointerup','pointercancel','pointerleave'])el.addEventListener(ev,()=>{pressed[key]=false;el.classList.remove('active')})}
+bind('gas','gas');bind('brake','brake');bind('left','left');bind('right','right');
+document.getElementById('start').onclick=()=>{running=true;document.getElementById('center').style.display='none';speed=35};
+let last=performance.now();function animate(now){requestAnimationFrame(animate);let dt=Math.min((now-last)/1000,.04);last=now;
+if(running){if(pressed.gas)speed=Math.min(190,speed+48*dt);else speed=Math.max(38,speed-8*dt);if(pressed.brake)speed=Math.max(0,speed-95*dt);
+if(pressed.left)lane=Math.max(-4.5,lane-7*dt);if(pressed.right)lane=Math.min(4.5,lane+7*dt);
+bike.position.x+=(lane-bike.position.x)*Math.min(1,dt*6);bike.rotation.z+=( (pressed.left?.22:pressed.right?-.22:0)-bike.rotation.z)*dt*4;
+wheelie=pressed.gas&&speed>90?.12:0;bike.rotation.x+=(wheelie-bike.rotation.x)*dt*2;
+let move=speed*dt*.34;dist+=move;score+=Math.round(move*.2);
+for(const d of dashes){d.position.z+=move;if(d.position.z>30)d.position.z-=330}
+for(const c of obstacles){c.position.z+=move;if(c.position.z>12){c.position.z=-220-Math.random()*90;c.position.x=[-4,0,4][Math.floor(Math.random()*3)]}
+if(Math.abs(c.position.z-bike.position.z)<1.9&&Math.abs(c.position.x-bike.position.x)<1.15){speed*=.91;score=Math.max(0,score-3)}}
+for(const m of mountains){m.position.z+=move*.7;if(m.position.z>25)m.position.z-=420}
+document.getElementById('speed').innerHTML=Math.round(speed)+' <small>KM/H</small>';document.getElementById('distance').textContent='DIST '+Math.floor(dist)+' M';document.getElementById('score').textContent='SCORE '+score;
+}
+bike.position.y=.02+Math.sin(now*.008)*.015;
+camera.position.lerp(new THREE.Vector3(bike.position.x*.55,5.2,8.8),.055);camera.lookAt(bike.position.x*.35,1,-9);
+renderer.render(scene,camera)}
+requestAnimationFrame(animate);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>
